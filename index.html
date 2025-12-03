@@ -1,81 +1,224 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Medicine: Immunization Sim</title>
+    <title>Immunization Skills Lab</title>
     <style>
         /* --- CSS STYLES --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; }
-        #app-container { width: 900px; max-width: 100%; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; min-height: 700px; display: flex; flex-direction: column; position: relative; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #c0392b; --bg: #f4f6f9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; color: #333; }
+        
+        /* Main Container */
+        #app { width: 900px; max-width: 100%; background: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); overflow: hidden; min-height: 750px; display: flex; flex-direction: column; }
         
         /* Header */
-        header { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .student-info { font-size: 0.9em; opacity: 0.9; }
-        .score-badge { background: #e67e22; padding: 5px 10px; border-radius: 20px; font-weight: bold; }
-
+        header { background: var(--primary); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .score-box { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        
         /* Screens */
-        .screen { display: none; padding: 30px; flex-grow: 1; overflow-y: auto; animation: fadein 0.5s; }
-        .active { display: block !important; }
-        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+        .screen { display: none; padding: 30px; flex-grow: 1; overflow-y: auto; animation: fadein 0.4s ease-in-out; }
+        .screen.active { display: block; }
+        @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Typography & Inputs */
-        h2 { color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
-        .intro-text { background: #e8f6f3; padding: 20px; border-left: 5px solid #1abc9c; border-radius: 4px; color: #16a085; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        
-        /* Buttons */
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: 0.2s; margin-top: 10px; }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-primary:hover { background: #2980b9; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-danger { background: #c0392b; color: white; }
-        
+        /* Typography */
+        h2 { color: var(--accent); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        p { line-height: 1.6; font-size: 1.05rem; }
+        .highlight { background: #e8f6f3; color: #16a085; padding: 15px; border-left: 5px solid #1abc9c; border-radius: 4px; margin-bottom: 20px; }
+
+        /* Inputs & Buttons */
+        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.2s; margin-top: 10px; }
+        button:hover { transform: translateY(-2px); shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+
         /* Feedback */
-        .feedback { margin-top: 20px; padding: 15px; border-radius: 5px; font-weight: bold; display: none; }
+        .feedback { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: bold; display: none; }
         .feedback.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .feedback.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-        /* STATION 1: VVM */
-        .vvm-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
-        .vvm-card { width: 150px; border: 2px solid #eee; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .vvm-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .vvm-card.selected { border-color: #3498db; background: #ebf5fb; }
+        /* --- STATION SPECIFIC STYLES --- */
         
-        /* VVM Visuals */
-        .vvm-circle { width: 60px; height: 60px; border-radius: 50%; background: #5d3f6a; margin: 0 auto 10px; position: relative; display: flex; justify-content: center; align-items: center; }
-        .vvm-square { width: 30px; height: 30px; }
-        
-        /* STATION 3: Schedule */
-        .vaccine-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-        .vax-btn { background: white; border: 1px solid #bdc3c7; padding: 10px 15px; border-radius: 20px; cursor: pointer; user-select: none; transition: background 0.2s; }
-        .vax-btn.active { background: #3498db; color: white; border-color: #2980b9; }
-        .vax-btn:hover { background: #ecf0f1; }
+        /* VVM */
+        .vvm-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+        .vvm-card { width: 140px; border: 2px solid #eee; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .vvm-card:hover { border-color: #bbb; }
+        .vvm-card.selected { border-color: var(--accent); background: #ebf5fb; box-shadow: 0 0 0 2px var(--accent); }
+        .vvm-circle { width: 50px; height: 50px; border-radius: 50%; background: #5d3f6a; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; }
+        .vvm-square { width: 25px; height: 25px; }
 
-        /* STATION 4: Route & Site */
-        .child-view { text-align: center; margin-bottom: 20px; }
-        .child-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; background: #eee; border: 3px solid #3498db; }
-        .rs-options { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
-        .rs-col { width: 45%; }
-        .rs-btn { display: block; width: 100%; padding: 10px; margin-bottom: 5px; background: #fff; border: 1px solid #ccc; cursor: pointer; border-radius: 5px; }
-        .rs-btn.selected { background: #2c3e50; color: white; }
+        /* Schedule */
+        .vaccine-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+        .vax-tag { padding: 8px 12px; border: 1px solid #ccc; border-radius: 20px; cursor: pointer; user-select: none; font-size: 0.9rem; background: white; }
+        .vax-tag:hover { background: #f8f9fa; }
+        .vax-tag.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* STATION 5: Waste */
-        .waste-area { display: flex; justify-content: space-between; margin-top: 30px; }
-        .waste-items { width: 40%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .waste-item { padding: 15px; background: #fff; border: 2px solid #ccc; text-align: center; cursor: pointer; border-radius: 8px; font-size: 24px; }
-        .waste-item.selected { border-color: #e67e22; background: #fdf2e9; transform: scale(1.05); }
-        .waste-item.done { opacity: 0.3; pointer-events: none; border-color: transparent; }
+        /* Route & Site */
+        .child-view { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; background: #fafafa; padding: 20px; border-radius: 10px; }
+        .child-emoji { font-size: 4rem; background: #fff; padding: 10px; border-radius: 50%; border: 3px solid #eee; }
+        .rs-container { display: flex; gap: 20px; }
+        .rs-column { flex: 1; }
+        .rs-option { padding: 10px; margin-bottom: 5px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; text-align: center; background: white; }
+        .rs-option:hover { background: #f1f1f1; }
+        .rs-option.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Waste */
+        .waste-zone { display: flex; justify-content: space-between; gap: 20px; margin-top: 20px; }
+        .waste-source { width: 40%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .waste-item { padding: 20px; border: 2px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; font-size: 1.2rem; background: white; }
+        .waste-item.selected { border-color: var(--accent); background: #ebf5fb; }
+        .waste-item.done { opacity: 0.3; pointer-events: none; border-color: transparent; background: #eee; }
+
+        .bin-row { width: 55%; display: flex; gap: 10px; justify-content: flex-end; align-items: flex-end; }
+        .bin { width: 23%; height: 120px; border-radius: 6px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 0.85rem; text-align: center; transition: transform 0.2s; position: relative; }
+        .bin:hover { transform: scale(1.05); }
+        .bin-white { background: #fdfdfd; color: #333; border: 2px solid #999; }
+        .bin-red { background: #e74c3c; }
+        .bin-yellow { background: #f1c40f; color: #333; }
+        .bin-blue { background: #3498db; }
         
-        .waste-bins { width: 50%; display: flex; gap: 10px; justify-content: flex-end; }
-        .bin { width: 80px; height: 100px; display: flex; align-items: flex-end; justify-content: center; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; padding-bottom: 10px; font-size: 0.8rem; text-align: center; position: relative; border: 2px solid rgba(0,0,0,0.1); }
-        .bin:hover { transform: scale(1.1); z-index: 2; }
+        /* Syringe States for Waste */
+        .syringe-state { font-size: 0.8rem; display: block; margin-top: 5px; color: #666; }
     </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <div>🏥 Immunization Skills Lab</div>
+        <div class="score-box">
+            <span id="header-name">Student</span> | Score: <span id="header-score">0</span>
+        </div>
+    </header>
+
+    <div id="screen-login" class="screen active">
+        <h2>Welcome</h2>
+        <div class="highlight">
+            <p><strong>Goal:</strong> Complete the immunization session for a randomly assigned child.</p>
+            <p>You will be assessed on VVM, Open Vial Policy, Scheduling, Technique, and Waste Disposal.</p>
+        </div>
+        <div style="max-width: 400px; margin: 0 auto;">
+            <label>Name</label>
+            <input type="text" id="inp-name" placeholder="Full Name">
+            <label>Roll Number</label>
+            <input type="text" id="inp-roll" placeholder="Roll No">
+            <button class="btn-primary" style="width:100%" onclick="startGame()">Start Session</button>
+        </div>
+    </div>
+
+    <div id="screen-vvm" class="screen">
+        <h2>Station 1: Cold Chain & VVM</h2>
+        <p>Inspect the vaccine vials. <strong>Click to select ONLY the usable ones.</strong> Leave the unusable ones unselected.</p>
+        <div id="vvm-container" class="vvm-grid"></div>
+        <div id="vvm-feedback" class="feedback"></div>
+        <button class="btn-success" onclick="validateVVM()">Check Selection</button>
+    </div>
+
+    <div id="screen-ovp" class="screen">
+        <h2>Station 2: Open Vial Policy</h2>
+        <div class="highlight">
+            <h3 id="ovp-question-text" style="margin-top:0">Loading...</h3>
+        </div>
+        <div id="ovp-buttons">
+            <button class="btn-success" onclick="handleOVPAnswer(true)">✅ Usable</button>
+            <button class="btn-danger" onclick="handleOVPAnswer(false)">🗑️ Discard</button>
+        </div>
+        <div id="ovp-feedback" class="feedback"></div>
+    </div>
+
+    <div id="screen-schedule" class="screen">
+        <h2>Station 3: Immunization Schedule</h2>
+        <div class="highlight">
+            Patient: <strong id="patient-profile-text" style="font-size: 1.2rem;">...</strong>
+        </div>
+        <p>Select all vaccines applicable for this visit (Alphabetical Order):</p>
+        <div id="vaccine-container" class="vaccine-grid"></div>
+        <div id="schedule-feedback" class="feedback"></div>
+        <button class="btn-success" onclick="validateSchedule()">Verify Schedule</button>
+    </div>
+
+    <div id="screen-route" class="screen">
+        <h2>Station 4: Administration Technique</h2>
+        <div class="child-view">
+            <div class="child-emoji">👶</div>
+            <div>
+                <div>Administering:</div>
+                <strong id="current-vax-name" style="font-size: 1.5rem; color: var(--accent);">...</strong>
+            </div>
+        </div>
+        
+        <div class="rs-container">
+            <div class="rs-column" id="col-route">
+                <strong>Route</strong>
+                <div class="rs-option" onclick="selectOption('route', 'Oral', this)">Oral (Drops)</div>
+                <div class="rs-option" onclick="selectOption('route', 'Intradermal', this)">Intradermal (ID)</div>
+                <div class="rs-option" onclick="selectOption('route', 'Intramuscular', this)">Intramuscular (IM)</div>
+                <div class="rs-option" onclick="selectOption('route', 'Subcutaneous', this)">Subcutaneous (SC)</div>
+            </div>
+            <div class="rs-column" id="col-site">
+                <strong>Site</strong>
+                <div class="rs-option" onclick="selectOption('site', 'Mouth', this)">Mouth</div>
+                <div class="rs-option" onclick="selectOption('site', 'Left Upper Arm', this)">Left Upper Arm</div>
+                <div class="rs-option" onclick="selectOption('site', 'Right Upper Arm', this)">Right Upper Arm</div>
+                <div class="rs-option" onclick="selectOption('site', 'Mid-Thigh', this)">Anterolateral Mid-Thigh</div>
+                <div class="rs-option" onclick="selectOption('site', 'Gluteal', this)">Gluteal (Buttock)</div>
+            </div>
+        </div>
+        <div id="route-feedback" class="feedback"></div>
+        <button id="btn-route-check" class="btn-success" onclick="validateRoute()">Administer</button>
+    </div>
+
+    <div id="screen-waste" class="screen">
+        <h2>Station 5: Waste Management</h2>
+        <p>Click an item on the left, then click the correct bin on the right.</p>
+        
+        <div class="waste-zone">
+            <div class="waste-items">
+                <div class="waste-item" id="w-wrapper" onclick="selectWaste('wrapper', this)">
+                    🍬<br><span class="syringe-state">Plastic Wrapper</span>
+                </div>
+                <div class="waste-item" id="w-cotton" onclick="selectWaste('cotton', this)">
+                    🩸<br><span class="syringe-state">Soiled Cotton</span>
+                </div>
+                <div class="waste-item" id="w-syringe" onclick="selectWaste('syringe', this)">
+                    💉<br><span id="lbl-syringe" class="syringe-state">AD Syringe (With Needle)</span>
+                </div>
+            </div>
+            
+            <div class="bin-row">
+                <div class="bin bin-white" onclick="useBin('white')">Hub Cutter<br>(White)</div>
+                <div class="bin bin-red" onclick="useBin('red')">Red</div>
+                <div class="bin bin-yellow" onclick="useBin('yellow')">Yellow</div>
+                <div class="bin bin-blue" onclick="useBin('blue')">Blue</div>
+            </div>
+        </div>
+        <div id="waste-feedback" class="feedback"></div>
+    </div>
+
+    <div id="screen-result" class="screen" style="text-align: center;">
+        <h1>Session Complete</h1>
+        <p>Student: <strong id="res-name"></strong></p>
+        <p>Roll No: <strong id="res-roll"></strong></p>
+        <div style="font-size: 4rem; font-weight: bold; color: var(--accent); margin: 20px 0;">
+            <span id="res-score">0</span>
+        </div>
+        <p>Scenario: <span id="res-scenario"></span></p>
+        
+        <button class="btn-primary" onclick="submitGoogleForm()">📤 Submit to Faculty</button>
+        <br><br>
+        <button class="btn-outline" onclick="location.reload()">🔄 Start New Session</button>
+    </div>
+
+</div>
+
 <script>
-        /* ----------------------------------------------------
-           CONFIGURATION: UPDATE THIS SECTION WITH YOUR GOOGLE FORM
-           ---------------------------------------------------- */
-        const FORM_CONFIG = {
+    /* =========================================
+       1. CONFIGURATION & DATA
+       ========================================= */
+    const FORM_CONFIG = {
             url: "https://docs.google.com/forms/d/e/1FAIpQLSfgBDH5DXNNADQwQQZlfMiatxkFLLY4iveP5jSHMl1z_1SWBQ/viewform", 
             nameID: "entry.1463400327",       // Entry ID for Name
             rollID: "entry.497790852",       // Entry ID for Roll No
@@ -83,492 +226,412 @@
             scenarioID: "entry.1366785076"    // Entry ID for Scenario
         };
 
-        /* --- VACCINE DATABASE (ALPHABETICAL) --- */
-        const ALL_VACCINES = [
-            "BCG", "DPT-Booster-1", "DPT-Booster-2", "fIPV-1", "fIPV-2", "fIPV-3",
-            "HepB-0", "JE-1", "JE-2", "MR-1", "MR-2", "OPV-0", "OPV-1", "OPV-2", "OPV-3", "OPV-Booster",
-            "PCV-1", "PCV-2", "PCV-Booster", "Pentavalent-1", "Pentavalent-2", "Pentavalent-3",
-            "Rotavirus-1", "Rotavirus-2", "Rotavirus-3", "TT", "Vitamin A (1ml)", "Vitamin A (2ml)"
-        ];
+    const VACCINES_LIST = [
+        "BCG", "DPT-Booster-1", "DPT-Booster-2", "fIPV-1", "fIPV-2", 
+        "HepB-0", "JE-1", "JE-2", "MR-1", "MR-2", "OPV-0", "OPV-1", 
+        "OPV-2", "OPV-3", "OPV-Booster", "PCV-1", "PCV-2", "PCV-Booster", 
+        "Pentavalent-1", "Pentavalent-2", "Pentavalent-3", "Rotavirus-1", 
+        "Rotavirus-2", "Rotavirus-3", "TT", "Vitamin A (1ml)", "Vitamin A (2ml)"
+    ];
 
-        /* --- CORRECT ANSWERS DATABASE --- */
-        const VACCINE_DETAILS = {
-            "BCG": { route: "Intradermal", site: "Left Upper Arm" },
-            "HepB-0": { route: "Intramuscular", site: "Mid-Thigh" },
-            "OPV": { route: "Oral", site: "Mouth" }, 
-            "Pentavalent": { route: "Intramuscular", site: "Mid-Thigh" }, 
-            "Rotavirus": { route: "Oral", site: "Mouth" },
-            "PCV": { route: "Intramuscular", site: "Mid-Thigh" },
-            "fIPV": { route: "Intradermal", site: "Right Upper Arm" }, 
-            "MR": { route: "Subcutaneous", site: "Right Upper Arm" },
-            "JE": { route: "Subcutaneous", site: "Left Upper Arm" },
-            "DPT": { route: "Intramuscular", site: "Mid-Thigh" }, 
-            "Vitamin A": { route: "Oral", site: "Mouth" },
-            "TT": { route: "Intramuscular", site: "Upper Arm" }
-        };
+    const VACCINE_RULES = {
+        "BCG": { route: "Intradermal", site: "Left Upper Arm" },
+        "HepB-0": { route: "Intramuscular", site: "Mid-Thigh" },
+        "OPV": { route: "Oral", site: "Mouth" },
+        "Pentavalent": { route: "Intramuscular", site: "Mid-Thigh" },
+        "Rotavirus": { route: "Oral", site: "Mouth" },
+        "PCV": { route: "Intramuscular", site: "Mid-Thigh" },
+        "fIPV": { route: "Intradermal", site: "Right Upper Arm" },
+        "MR": { route: "Subcutaneous", site: "Right Upper Arm" },
+        "JE": { route: "Subcutaneous", site: "Left Upper Arm" },
+        "DPT": { route: "Intramuscular", site: "Mid-Thigh" },
+        "Vitamin A": { route: "Oral", site: "Mouth" },
+        "TT": { route: "Intramuscular", site: "Left Upper Arm" } 
+    };
 
-        /* --- SCENARIOS --- */
-        const PATIENT_PROFILES = [
-            { label: "Newborn (Birth Dose)", correct: ["BCG", "OPV-0", "HepB-0"] },
-            { label: "6 Weeks Old", correct: ["OPV-1", "Pentavalent-1", "Rotavirus-1", "fIPV-1", "PCV-1"] },
-            { label: "9 Months Old", correct: ["MR-1", "JE-1", "PCV-Booster", "Vitamin A (1ml)"] },
-            { label: "14 Weeks Old", correct: ["OPV-3", "Pentavalent-3", "Rotavirus-3", "fIPV-2", "PCV-2"] }
-        ];
+    const PATIENTS = [
+        { label: "Newborn (Birth Dose)", correct: ["BCG", "OPV-0", "HepB-0"] },
+        { label: "6 Weeks Old", correct: ["OPV-1", "Pentavalent-1", "Rotavirus-1", "fIPV-1", "PCV-1"] },
+        { label: "10 Weeks Old", correct: ["OPV-2", "Pentavalent-2", "Rotavirus-2"] },
+        { label: "14 Weeks Old", correct: ["OPV-3", "Pentavalent-3", "Rotavirus-3", "fIPV-2", "PCV-2"] },
+        { label: "9 Months Old", correct: ["MR-1", "JE-1", "PCV-Booster", "Vitamin A (1ml)"] }
+    ];
 
-        /* --- STATE VARIABLES --- */
-        let student = { name: "", roll: "" };
-        let currentPatient = {};
-        let score = 0;
-        let selectedVVMs = [];
-        let ovpQuestionIndex = 0; // CRITICAL: This must reset on login
-        let selectedVaccines = [];
-        let wasteSelection = null;
-        let needleCut = false;
+    /* =========================================
+       2. GLOBAL STATE
+       ========================================= */
+    let gameState = {
+        name: "",
+        roll: "",
+        score: 0,
+        patient: null,
+        ovpIndex: 0,
+        selectedVaccines: [],
+        routeQueue: [],
+        currentRouteVax: "",
+        wasteSelected: null,
+        needleCut: false,
+        routeChoice: "",
+        siteChoice: ""
+    };
+
+    /* =========================================
+       3. NAVIGATION ENGINE
+       ========================================= */
+    function navigateTo(screenId) {
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        // Show target
+        const target = document.getElementById(screenId);
+        if(target) {
+            target.classList.add('active');
+            // Auto-trigger setup functions
+            if(screenId === 'screen-vvm') setupVVM();
+            if(screenId === 'screen-ovp') setupOVP();
+            if(screenId === 'screen-schedule') setupSchedule();
+            if(screenId === 'screen-route') setupRoute();
+            if(screenId === 'screen-waste') setupWaste();
+            if(screenId === 'screen-result') setupResult();
+        } else {
+            console.error("Screen ID not found:", screenId);
+        }
+    }
+
+    /* =========================================
+       4. GAME LOGIC FUNCTIONS
+       ========================================= */
+
+    function startGame() {
+        const n = document.getElementById('inp-name').value.trim();
+        const r = document.getElementById('inp-roll').value.trim();
         
-        function getGenericName(vaxName) {
-            if(vaxName.includes("Vitamin A")) return "Vitamin A";
-            if(vaxName.includes("OPV")) return "OPV";
-            if(vaxName.includes("Pentavalent")) return "Pentavalent";
-            if(vaxName.includes("Rotavirus")) return "Rotavirus";
-            if(vaxName.includes("PCV")) return "PCV";
-            if(vaxName.includes("fIPV")) return "fIPV";
-            if(vaxName.includes("MR")) return "MR";
-            if(vaxName.includes("JE")) return "JE";
-            if(vaxName.includes("DPT")) return "DPT";
-            return vaxName;
+        if(!n || !r) {
+            alert("Please enter Name and Roll Number.");
+            return;
         }
 
-        /* --- FUNCTIONS --- */
+        // Hard Reset State
+        gameState.name = n;
+        gameState.roll = r;
+        gameState.score = 0;
+        gameState.ovpIndex = 0;
+        gameState.selectedVaccines = [];
+        gameState.needleCut = false;
         
-        function login() {
-            const n = document.getElementById('inp-name').value;
-            const r = document.getElementById('inp-roll').value;
-            if(!n || !r) { alert("Please enter Name and Roll Number."); return; }
-            student.name = n;
-            student.roll = r;
-            document.getElementById('display-name').innerText = n;
-            
-            // RESET ALL STATE VARIABLES
-            score = 0;
-            selectedVVMs = [];
-            ovpQuestionIndex = 0; // FIX: Ensure we start at Question 1
-            selectedVaccines = [];
-            wasteSelection = null;
-            needleCut = false;
-            
-            // Pick Random Patient
-            currentPatient = PATIENT_PROFILES[Math.floor(Math.random() * PATIENT_PROFILES.length)];
-            
-            goToScreen('screen-vvm');
-            renderVVMs();
-        }
+        // Pick Random Patient
+        gameState.patient = PATIENTS[Math.floor(Math.random() * PATIENTS.length)];
 
-        function goToScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        // Update Header
+        document.getElementById('header-name').innerText = n;
+        document.getElementById('header-score').innerText = "0";
 
-        function updateScore(pts) {
-            score += pts;
-            document.getElementById('display-score').innerText = score;
-        }
+        navigateTo('screen-vvm');
+    }
 
-        /* STATION 1: VVM RANDOMIZED */
-        function renderVVMs() {
-            const stages = [
-                { id: 1, color: '#fff', valid: true, label: "Stage 1 (White)" },
-                { id: 2, color: '#dcdcdc', valid: true, label: "Stage 2 (Light Grey)" },
-                { id: 3, color: '#5d3f6a', valid: false, label: "Stage 3 (Matches)" },
-                { id: 4, color: '#2c1e30', valid: false, label: "Stage 4 (Darker)" }
-            ];
-            stages.sort(() => Math.random() - 0.5);
-            
-            const container = document.getElementById('vvm-container');
-            container.innerHTML = "";
-            stages.forEach(s => {
-                const div = document.createElement('div');
-                div.className = "vvm-card";
-                div.onclick = function() { toggleVVM(s.id, this); };
-                div.innerHTML = `
-                    <div class="vvm-circle" style="background:#5d3f6a">
-                        <div class="vvm-square" style="background:${s.color}"></div>
-                    </div>
-                    <strong>${s.label}</strong>
-                `;
-                div.dataset.id = s.id;
-                div.dataset.valid = s.valid;
-                container.appendChild(div);
-            });
-        }
+    function addScore(points) {
+        gameState.score += points;
+        document.getElementById('header-score').innerText = gameState.score;
+    }
 
-        function toggleVVM(id, el) {
-            if(el.classList.contains('selected')) {
-                el.classList.remove('selected');
-                selectedVVMs = selectedVVMs.filter(x => x !== id);
-            } else {
-                el.classList.add('selected');
-                selectedVVMs.push(id);
-            }
-        }
-
-        function checkVVM() {
-            const allCards = document.querySelectorAll('.vvm-card');
-            let error = false;
-            allCards.forEach(card => {
-                const isValid = card.dataset.valid === "true";
-                const isSelected = card.classList.contains('selected');
-                if(isValid !== isSelected) error = true;
-            });
-
-            const fb = document.getElementById('vvm-feedback');
-            fb.style.display = 'block';
-            if(!error) {
-                fb.className = "feedback success";
-                fb.innerText = "✅ Correct! Usable vials selected.";
-                updateScore(10);
-                // FIX: EXPLICITLY TRIGGER OVP RENDER BEFORE SHOWING SCREEN
-                setTimeout(() => {
-                    renderOVP(); 
-                    goToScreen('screen-ovp');
-                }, 1500);
-            } else {
-                fb.className = "feedback error";
-                fb.innerText = "❌ Incorrect. Remember the rule: Lighter = Use.";
-                updateScore(-5);
-            }
-        }
-
-        /* STATION 2: OVP (2 Questions) */
-        const ovpQuestions = [
-            { q: "Pentavalent vial opened 15 days ago. Kept cold. VVM good. Usable?", ans: true, reason: "Liquid vaccines (Penta, IPV, Td) last 28 days." },
-            { q: "Measles vial (Reconstituted) opened 6 hours ago. Usable?", ans: false, reason: "Reconstituted vaccines expire in 4 hours." }
+    /* --- STATION 1: VVM --- */
+    function setupVVM() {
+        const container = document.getElementById('vvm-container');
+        container.innerHTML = "";
+        document.getElementById('vvm-feedback').style.display = 'none';
+        
+        const cards = [
+            { id: 1, color: "#fff", valid: true, label: "Stage 1" },
+            { id: 2, color: "#dcdcdc", valid: true, label: "Stage 2" },
+            { id: 3, color: "#5d3f6a", valid: false, label: "Stage 3" },
+            { id: 4, color: "#2c1e30", valid: false, label: "Stage 4" }
         ];
+        // Randomize
+        cards.sort(() => Math.random() - 0.5);
 
-        function renderOVP() {
-            // FIX: CHECK PROGRESS. IF DONE, MOVE TO NEXT STATION.
-            if(ovpQuestionIndex >= ovpQuestions.length) {
-                initSchedule(); // Setup Station 3
-                goToScreen('screen-schedule'); // Go to Station 3
-                return;
-            }
-            // RENDER CURRENT QUESTION
-            const qData = ovpQuestions[ovpQuestionIndex];
-            document.getElementById('ovp-text').innerText = `Question ${ovpQuestionIndex+1}: ${qData.q}`;
-            document.getElementById('ovp-feedback').style.display = 'none';
-            document.getElementById('ovp-controls').style.display = 'block';
+        cards.forEach(c => {
+            const el = document.createElement('div');
+            el.className = 'vvm-card';
+            el.dataset.valid = c.valid;
+            el.onclick = () => el.classList.toggle('selected');
+            el.innerHTML = `
+                <div class="vvm-circle"><div class="vvm-square" style="background:${c.color}"></div></div>
+                <strong>${c.label}</strong>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    function validateVVM() {
+        const cards = document.querySelectorAll('.vvm-card');
+        let error = false;
+        cards.forEach(c => {
+            const isSel = c.classList.contains('selected');
+            const isValid = c.dataset.valid === "true";
+            if(isSel !== isValid) error = true;
+        });
+
+        const fb = document.getElementById('vvm-feedback');
+        fb.style.display = 'block';
+        
+        if(!error) {
+            fb.className = "feedback success";
+            fb.innerText = "✅ Correct! You identified usable vs unusable vials.";
+            addScore(10);
+            setTimeout(() => navigateTo('screen-ovp'), 1500);
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Incorrect. Rule: Use if square is lighter. Discard if matches or darker.";
+            addScore(-5);
+        }
+    }
+
+    /* --- STATION 2: OVP --- */
+    const OVP_QS = [
+        { q: "Pentavalent vial opened 15 days ago. Cold chain maintained. VVM good. Use?", ans: true, note: "Liquid vaccines (Penta/IPV/Td) open vial policy applies (28 days)." },
+        { q: "Measles vial (Reconstituted) opened 6 hours ago. Cold chain maintained. Use?", ans: false, note: "Reconstituted vaccines must be discarded after 4 hours." }
+    ];
+
+    function setupOVP() {
+        // Check if we are done
+        if(gameState.ovpIndex >= OVP_QS.length) {
+            navigateTo('screen-schedule');
+            return;
+        }
+        
+        // Reset UI for next question
+        const q = OVP_QS[gameState.ovpIndex];
+        document.getElementById('ovp-question-text').innerText = `Scenario ${gameState.ovpIndex+1}: ${q.q}`;
+        document.getElementById('ovp-buttons').style.display = 'block';
+        document.getElementById('ovp-feedback').style.display = 'none';
+    }
+
+    function handleOVPAnswer(userChoice) {
+        const q = OVP_QS[gameState.ovpIndex];
+        const fb = document.getElementById('ovp-feedback');
+        fb.style.display = 'block';
+        document.getElementById('ovp-buttons').style.display = 'none';
+
+        if(userChoice === q.ans) {
+            fb.className = "feedback success";
+            fb.innerText = "✅ Correct. " + q.note;
+            addScore(5);
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = "❌ Incorrect. " + q.note;
+            addScore(-5);
         }
 
-        function answerOVP(userAns) {
-            const qData = ovpQuestions[ovpQuestionIndex];
-            const fb = document.getElementById('ovp-feedback');
-            fb.style.display = 'block';
-            document.getElementById('ovp-controls').style.display = 'none';
+        gameState.ovpIndex++;
+        setTimeout(setupOVP, 2500); // Wait then reload station logic
+    }
 
-            if(userAns === qData.ans) {
-                fb.className = "feedback success";
-                fb.innerHTML = "✅ Correct. " + qData.reason;
-                updateScore(5);
-            } else {
-                fb.className = "feedback error";
-                fb.innerHTML = "❌ Incorrect. " + qData.reason;
-                updateScore(-5);
-            }
-            
-            // INCREMENT & QUEUE NEXT RENDER
-            ovpQuestionIndex++;
-            setTimeout(renderOVP, 2500);
-        }
-
-        /* STATION 3: SCHEDULE */
-        function initSchedule() {
-            // Populate the Patient Name
-            document.getElementById('patient-label').innerText = currentPatient.label;
-            
-            // Populate the Vaccine List
-            const container = document.getElementById('vaccine-list');
-            container.innerHTML = "";
-            
-            ALL_VACCINES.forEach(v => {
-                const btn = document.createElement('div');
-                btn.className = "vax-btn";
-                btn.innerText = v;
-                btn.onclick = function() {
-                    this.classList.toggle('active');
-                    if(selectedVaccines.includes(v)) selectedVaccines = selectedVaccines.filter(x=>x!==v);
-                    else selectedVaccines.push(v);
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function checkSchedule() {
-            const missing = currentPatient.correct.filter(x => !selectedVaccines.includes(x));
-            const extra = selectedVaccines.filter(x => !currentPatient.correct.includes(x));
-            
-            const fb = document.getElementById('sch-feedback');
-            fb.style.display = 'block';
-            
-            if(missing.length === 0 && extra.length === 0) {
-                fb.className = "feedback success";
-                fb.innerText = "✅ Perfect Schedule Selection.";
-                updateScore(20);
-                setTimeout(initRouteStation, 1500);
-            } else {
-                fb.className = "feedback error";
-                fb.innerText = `❌ Incorrect. Missing: ${missing.join(', ')}.`;
-                updateScore(-5);
-            }
-        }
-
-        /* STATION 4: ROUTE & SITE */
-        let routeQueue = [];
-        let currentRouteVax = "";
-
-        function initRouteStation() {
-            goToScreen('screen-route');
-            routeQueue = [...currentPatient.correct]; 
-            nextRouteQuestion();
-        }
-
-        function nextRouteQuestion() {
-            if(routeQueue.length === 0) {
-                goToScreen('screen-waste');
-                return;
-            }
-            currentRouteVax = routeQueue.shift();
-            document.getElementById('route-vax-name').innerText = currentRouteVax;
-            
-            document.querySelectorAll('.rs-btn').forEach(b => b.classList.remove('selected'));
-            document.getElementById('route-feedback').style.display = 'none';
-            document.getElementById('btn-check-route').style.display = 'inline-block';
-        }
-
-        function selectRouteOption(type, val, el) {
-            el.parentNode.querySelectorAll('.rs-btn').forEach(b => b.classList.remove('selected'));
-            el.classList.add('selected');
-            el.parentNode.dataset.value = val;
-        }
-
-        function checkRoute() {
-            const rGroup = document.getElementById('opt-route');
-            const sGroup = document.getElementById('opt-site');
-            const userRoute = rGroup.dataset.value;
-            const userSite = sGroup.dataset.value;
-            
-            if(!userRoute || !userSite) { alert("Select both Route and Site."); return; }
-            
-            const generic = getGenericName(currentRouteVax);
-            const correct = VACCINE_DETAILS[generic];
-            
-            const fb = document.getElementById('route-feedback');
-            fb.style.display = 'block';
-            
-            if(userRoute === correct.route && userSite === correct.site) {
-                fb.className = "feedback success";
-                fb.innerText = "✅ Correct Technique.";
-                updateScore(5);
-                document.getElementById('btn-check-route').style.display = 'none';
-                setTimeout(nextRouteQuestion, 1000);
-            } else {
-                fb.className = "feedback error";
-                fb.innerText = `❌ Incorrect. ${currentRouteVax} is given via ${correct.route} at ${correct.site}.`;
-                updateScore(-5);
-                document.getElementById('btn-check-route').style.display = 'none';
-                setTimeout(nextRouteQuestion, 2500);
-            }
-        }
-
-        /* STATION 5: WASTE */
-        function selectWasteItem(id, el) {
-            if(el.classList.contains('done')) return;
-            document.querySelectorAll('.waste-item').forEach(i => i.classList.remove('selected'));
-            el.classList.add('selected');
-            wasteSelection = id;
-        }
-
-        function clickBin(binColor) {
-            if(!wasteSelection) return;
-            
-            const fb = document.getElementById('waste-feedback');
-            fb.style.display = 'block';
-            let correct = false;
-            let msg = "";
-
-            if(wasteSelection === 'wrapper' && binColor === 'red') {
-                correct = true; msg = "Correct! Wrapper -> Red Bin.";
-            } else if (wasteSelection === 'cotton' && binColor === 'yellow') {
-                correct = true; msg = "Correct! Soiled Cotton -> Yellow Bin.";
-            } else if (wasteSelection === 'syringe_full') {
-                 if(binColor === 'white') {
-                     correct = true; 
-                     msg = "Excellent! Needle cut. Hub remains.";
-                     needleCut = true;
-                     const syr = document.getElementById('item-syringe');
-                     syr.innerHTML = "💉<br>Plastic Hub";
-                     syr.id = "item-hub";
-                     syr.onclick = function() { selectWasteItem('hub', this) };
-                     wasteSelection = null; 
-                     document.querySelectorAll('.waste-item').forEach(i => i.classList.remove('selected'));
-                     updateScore(10);
-                     fb.className = "feedback success";
-                     fb.innerText = msg;
-                     return;
-                 } else {
-                     correct = false; msg = "⚠️ DANGER! Never put a needle in a plastic bag.";
-                 }
-            } else if (wasteSelection === 'hub' && binColor === 'red') {
-                if(!needleCut) { correct=false; msg="Cut needle first!"; }
-                else { correct=true; msg="Correct! Cut Hub -> Red Bin."; }
-            } else {
-                correct = false; msg = "Wrong Bin.";
-            }
-
-            if(correct) {
-                fb.className = "feedback success";
-                fb.innerText = msg;
-                updateScore(5);
-                if(wasteSelection !== 'syringe_full') {
-                    document.querySelector('.selected').classList.add('done');
-                    wasteSelection = null;
+    /* --- STATION 3: SCHEDULE --- */
+    function setupSchedule() {
+        document.getElementById('patient-profile-text').innerText = gameState.patient.label;
+        document.getElementById('schedule-feedback').style.display = 'none';
+        
+        const container = document.getElementById('vaccine-container');
+        container.innerHTML = "";
+        
+        VACCINES_LIST.forEach(v => {
+            const el = document.createElement('div');
+            el.className = 'vax-tag';
+            el.innerText = v;
+            el.onclick = () => {
+                el.classList.toggle('active');
+                if(gameState.selectedVaccines.includes(v)) {
+                    gameState.selectedVaccines = gameState.selectedVaccines.filter(x => x !== v);
+                } else {
+                    gameState.selectedVaccines.push(v);
                 }
-                checkWasteComplete();
-            } else {
-                fb.className = "feedback error";
+            };
+            container.appendChild(el);
+        });
+    }
+
+    function validateSchedule() {
+        const needed = gameState.patient.correct;
+        const chosen = gameState.selectedVaccines;
+        
+        const missing = needed.filter(x => !chosen.includes(x));
+        const extra = chosen.filter(x => !needed.includes(x));
+        
+        const fb = document.getElementById('schedule-feedback');
+        fb.style.display = 'block';
+
+        if(missing.length === 0 && extra.length === 0) {
+            fb.className = "feedback success";
+            fb.innerText = "✅ Perfect schedule selection.";
+            addScore(20);
+            setTimeout(() => navigateTo('screen-route'), 1500);
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = `❌ Error. Missing: ${missing.join(', ')}.`;
+            addScore(-5);
+        }
+    }
+
+    /* --- STATION 4: ROUTE --- */
+    function setupRoute() {
+        // Initialize queue based on correct vaccines for patient
+        if(gameState.routeQueue.length === 0) {
+            gameState.routeQueue = [...gameState.patient.correct];
+        }
+        
+        if(gameState.routeQueue.length === 0) {
+            navigateTo('screen-waste');
+            return;
+        }
+
+        gameState.currentRouteVax = gameState.routeQueue.shift();
+        gameState.routeChoice = "";
+        gameState.siteChoice = "";
+
+        // UI Reset
+        document.getElementById('current-vax-name').innerText = gameState.currentRouteVax;
+        document.getElementById('route-feedback').style.display = 'none';
+        document.getElementById('btn-route-check').style.display = 'inline-block';
+        document.querySelectorAll('.rs-option').forEach(el => el.classList.remove('selected'));
+    }
+
+    function selectOption(type, val, el) {
+        // Clear column
+        const colId = type === 'route' ? 'col-route' : 'col-site';
+        document.getElementById(colId).querySelectorAll('.rs-option').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        if(type === 'route') gameState.routeChoice = val;
+        else gameState.siteChoice = val;
+    }
+
+    function validateRoute() {
+        if(!gameState.routeChoice || !gameState.siteChoice) {
+            alert("Select both Route and Site.");
+            return;
+        }
+
+        // Generic lookup helper
+        let generic = gameState.currentRouteVax;
+        Object.keys(VACCINE_RULES).forEach(key => {
+            if(gameState.currentRouteVax.includes(key)) generic = key;
+        });
+
+        const correct = VACCINE_RULES[generic];
+        const fb = document.getElementById('route-feedback');
+        fb.style.display = 'block';
+
+        if(gameState.routeChoice === correct.route && gameState.siteChoice === correct.site) {
+            fb.className = "feedback success";
+            fb.innerText = "✅ Correct technique.";
+            addScore(5);
+            document.getElementById('btn-route-check').style.display = 'none';
+            setTimeout(setupRoute, 1000);
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = `❌ Incorrect. ${generic} is given via ${correct.route} at ${correct.site}.`;
+            addScore(-5);
+            document.getElementById('btn-route-check').style.display = 'none';
+            setTimeout(setupRoute, 2500);
+        }
+    }
+
+    /* --- STATION 5: WASTE --- */
+    function setupWaste() {
+        document.getElementById('waste-feedback').style.display = 'none';
+    }
+
+    function selectWaste(id, el) {
+        if(el.classList.contains('done')) return;
+        
+        gameState.wasteSelected = id;
+        document.querySelectorAll('.waste-item').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    function useBin(binColor) {
+        if(!gameState.wasteSelected) return;
+
+        const fb = document.getElementById('waste-feedback');
+        fb.style.display = 'block';
+        let correct = false;
+        let msg = "";
+
+        if(gameState.wasteSelected === 'wrapper') {
+            if(binColor === 'red') { correct = true; msg = "Correct! Red bin for plastics."; }
+            else { correct = false; msg = "Plastics go in Red Bin."; }
+        }
+        else if(gameState.wasteSelected === 'cotton') {
+            if(binColor === 'yellow') { correct = true; msg = "Correct! Soiled waste in Yellow."; }
+            else { correct = false; msg = "Soiled waste goes in Yellow Bin."; }
+        }
+        else if(gameState.wasteSelected === 'syringe') {
+            if(binColor === 'white') {
+                correct = true; 
+                msg = "Correct! Hub cut. Needle contained.";
+                gameState.needleCut = true;
+                // Transform item to hub
+                const el = document.getElementById('w-syringe');
+                el.innerHTML = "💉<br>Plastic Hub";
+                el.id = "w-hub";
+                el.onclick = function() { selectWaste('hub', this) };
+                el.classList.remove('selected');
+                gameState.wasteSelected = null;
+                addScore(10);
+                fb.className = "feedback success";
                 fb.innerText = msg;
-                updateScore(-5);
+                return; // Don't mark done yet, need to dispose hub
+            } else {
+                correct = false; msg = "⚠️ DANGER: Never dispose uncapped needle! Use Hub Cutter.";
             }
         }
+        else if(gameState.wasteSelected === 'hub') {
+            if(binColor === 'red') { correct = true; msg = "Correct! Cut hub in Red Bin."; }
+            else { correct = false; msg = "Plastic hub goes in Red Bin."; }
+        }
 
-        function checkWasteComplete() {
+        if(correct) {
+            fb.className = "feedback success";
+            fb.innerText = msg;
+            addScore(5);
+            // Mark items done (except syringe which handled above)
+            if(gameState.wasteSelected !== 'hub' && gameState.wasteSelected !== 'syringe') {
+                document.querySelector('.waste-item.selected').classList.add('done');
+            } else if (gameState.wasteSelected === 'hub') {
+                document.getElementById('w-hub').classList.add('done');
+            }
+            
+            gameState.wasteSelected = null;
+            
+            // Check completion
             const remaining = document.querySelectorAll('.waste-item:not(.done)').length;
-            if(remaining === 0) {
-                setTimeout(finishGame, 1500);
-            }
+            if(remaining === 0) setTimeout(() => navigateTo('screen-result'), 1500);
+        } else {
+            fb.className = "feedback error";
+            fb.innerText = msg;
+            addScore(-5);
         }
+    }
 
-        function finishGame() {
-            document.getElementById('final-name').innerText = student.name;
-            document.getElementById('final-score-val').innerText = score;
-            goToScreen('screen-result');
-        }
+    /* --- RESULT --- */
+    function setupResult() {
+        document.getElementById('res-name').innerText = gameState.name;
+        document.getElementById('res-roll').innerText = gameState.roll;
+        document.getElementById('res-score').innerText = gameState.score;
+        document.getElementById('res-scenario').innerText = gameState.patient.label;
+    }
 
-        function submitToGoogle() {
-            const url = `${FORM_CONFIG.url}?usp=pp_url&${FORM_CONFIG.nameID}=${encodeURIComponent(student.name)}&${FORM_CONFIG.rollID}=${encodeURIComponent(student.roll)}&${FORM_CONFIG.scoreID}=${score}&${FORM_CONFIG.scenarioID}=${encodeURIComponent(currentPatient.label)}`;
-            window.open(url, '_blank');
-        }
+    function submitGoogleForm() {
+        const base = FORM_CONFIG.url;
+        const qParams = [
+            `${FORM_CONFIG.nameID}=${encodeURIComponent(gameState.name)}`,
+            `${FORM_CONFIG.rollID}=${encodeURIComponent(gameState.roll)}`,
+            `${FORM_CONFIG.scoreID}=${gameState.score}`,
+            `${FORM_CONFIG.scenarioID}=${encodeURIComponent(gameState.patient.label)}`
+        ];
+        const fullUrl = `${base}?usp=pp_url&${qParams.join('&')}`;
+        window.open(fullUrl, '_blank');
+    }
 
-    </script>
-</head>
-<body> <div id="app-container">
-    <header>
-        <div>🏥 Immunization Safety Sim</div>
-        <div class="student-info">
-            <span id="display-name">Guest</span> | Score: <span id="display-score" class="score-badge">0</span>
-        </div>
-    </header>
-
-    <div id="screen-login" class="screen active">
-        <h2>Welcome to the Immunization Skills Lab</h2>
-        <div class="intro-text">
-            <p><strong>Topic:</strong> Safe immunization practices & Cold Chain Management.</p>
-        </div>
-        <div style="max-width: 400px; margin: 20px auto;">
-            <label>Student Name</label>
-            <input type="text" id="inp-name" placeholder="Enter Full Name">
-            <label>Roll Number</label>
-            <input type="text" id="inp-roll" placeholder="Enter Roll No">
-            <button class="btn btn-primary" style="width:100%" onclick="login()">Start Simulation</button>
-        </div>
-    </div>
-
-    <div id="screen-vvm" class="screen">
-        <h2>Station 1: Cold Chain & VVM</h2>
-        <p><strong>Select ALL usable vials.</strong></p>
-        <div id="vvm-container" class="vvm-grid"></div>
-        <div id="vvm-feedback" class="feedback"></div>
-        <button class="btn btn-success" onclick="checkVVM()">Check VVMs</button>
-    </div>
-
-    <div id="screen-ovp" class="screen">
-        <h2>Station 2: Open Vial Policy</h2>
-        <h3 id="ovp-text">Loading...</h3>
-        <div id="ovp-controls">
-            <button class="btn btn-primary" onclick="answerOVP(true)">✅ Usable</button>
-            <button class="btn btn-danger" onclick="answerOVP(false)">🗑️ Discard</button>
-        </div>
-        <div id="ovp-feedback" class="feedback"></div>
-    </div>
-
-    <div id="screen-schedule" class="screen">
-        <h2>Station 3: The Schedule</h2>
-        <p>Patient Age: <strong style="font-size:1.2em; color:#d35400;" id="patient-label">...</strong></p>
-        <p>Select the correct vaccines from the shelf:</p>
-        <div id="vaccine-list" class="vaccine-grid"></div>
-        <div id="sch-feedback" class="feedback"></div>
-        <button class="btn btn-success" onclick="checkSchedule()">Verify Schedule</button>
-    </div>
-
-    <div id="screen-route" class="screen">
-        <h2>Station 4: Administration</h2>
-        <div class="child-view">
-             
-
-[Image of AD syringe components diagram]
-
-            <div style="font-size: 80px;">👶</div> 
-            <p>Administering: <strong id="route-vax-name" style="font-size:1.5em; color:#2980b9">...</strong></p>
-        </div>
-
-        <div class="rs-options">
-            <div class="rs-col" id="opt-route" data-value="">
-                <strong>Select Route:</strong>
-                <div class="rs-btn" onclick="selectRouteOption('route','Oral',this)">Oral (Drops)</div>
-                <div class="rs-btn" onclick="selectRouteOption('route','Intradermal',this)">Intradermal (ID)</div>
-                <div class="rs-btn" onclick="selectRouteOption('route','Intramuscular',this)">Intramuscular (IM)</div>
-                <div class="rs-btn" onclick="selectRouteOption('route','Subcutaneous',this)">Subcutaneous (SC)</div>
-            </div>
-            <div class="rs-col" id="opt-site" data-value="">
-                <strong>Select Site:</strong>
-                <div class="rs-btn" onclick="selectRouteOption('site','Mouth',this)">Mouth</div>
-                <div class="rs-btn" onclick="selectRouteOption('site','Left Upper Arm',this)">Left Upper Arm</div>
-                <div class="rs-btn" onclick="selectRouteOption('site','Right Upper Arm',this)">Right Upper Arm</div>
-                <div class="rs-btn" onclick="selectRouteOption('site','Mid-Thigh',this)">Anterolateral Mid-Thigh</div>
-                <div class="rs-btn" onclick="selectRouteOption('site','Gluteal',this)">Gluteal (Buttock)</div>
-            </div>
-        </div>
-        <div id="route-feedback" class="feedback"></div>
-        <button id="btn-check-route" class="btn btn-success" onclick="checkRoute()">Administer</button>
-    </div>
-
-    <div id="screen-waste" class="screen">
-        <h2>Station 5: Biomedical Waste Management</h2>
-        <p>Dispose of the items. Click <strong>Item</strong> then <strong>Bin</strong>.</p>
-        <div class="waste-area">
-            <div class="waste-items">
-                <div class="waste-item" id="item-wrapper" onclick="selectWasteItem('wrapper', this)">🍬<br><small>Wrapper</small></div>
-                <div class="waste-item" id="item-syringe" onclick="selectWasteItem('syringe_full', this)">💉<br><small>AD Syringe</small></div>
-                <div class="waste-item" id="item-cotton" onclick="selectWasteItem('cotton', this)">🩸<br><small>Soiled Cotton</small></div>
-            </div>
-            <div class="waste-bins">
-                <div class="bin" style="background:#fff; border-color:#999; color:#333" onclick="clickBin('white')">Hub Cutter</div>
-                <div class="bin" style="background:#d9534f" onclick="clickBin('red')">Red Bin</div>
-                <div class="bin" style="background:#f0ad4e; color:#333" onclick="clickBin('yellow')">Yellow Bin</div>
-                <div class="bin" style="background:#0275d8" onclick="clickBin('blue')">Blue Bin</div>
-            </div>
-        </div>
-        <div id="waste-feedback" class="feedback"></div>
-    </div>
-
-    <div id="screen-result" class="screen" style="text-align: center;">
-        <h1>Complete</h1>
-        <p>Student: <strong id="final-name"></strong></p>
-        <h2 style="font-size:3em;"><span id="final-score-val">0</span></h2>
-        <button class="btn btn-primary" onclick="submitToGoogle()">📤 Submit Score</button>
-        <br><br>
-        <button class="btn" onclick="location.reload()">🔄 Restart</button>
-    </div>
-
-</div>
-
+</script>
 </body>
 </html>
