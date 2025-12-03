@@ -71,7 +71,7 @@
         .bin { width: 80px; height: 100px; display: flex; align-items: flex-end; justify-content: center; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; padding-bottom: 10px; font-size: 0.8rem; text-align: center; position: relative; border: 2px solid rgba(0,0,0,0.1); }
         .bin:hover { transform: scale(1.1); z-index: 2; }
     </style>
-    <script>
+<script>
         /* ----------------------------------------------------
            CONFIGURATION: UPDATE THIS SECTION WITH YOUR GOOGLE FORM
            ---------------------------------------------------- */
@@ -442,4 +442,133 @@
         function checkWasteComplete() {
             const remaining = document.querySelectorAll('.waste-item:not(.done)').length;
             if(remaining === 0) {
-                setTimeout(finishGame, 150
+                setTimeout(finishGame, 1500);
+            }
+        }
+
+        function finishGame() {
+            document.getElementById('final-name').innerText = student.name;
+            document.getElementById('final-score-val').innerText = score;
+            goToScreen('screen-result');
+        }
+
+        function submitToGoogle() {
+            const url = `${FORM_CONFIG.url}?usp=pp_url&${FORM_CONFIG.nameID}=${encodeURIComponent(student.name)}&${FORM_CONFIG.rollID}=${encodeURIComponent(student.roll)}&${FORM_CONFIG.scoreID}=${score}&${FORM_CONFIG.scenarioID}=${encodeURIComponent(currentPatient.label)}`;
+            window.open(url, '_blank');
+        }
+
+    </script>
+</head>
+<body> <div id="app-container">
+    <header>
+        <div>🏥 Immunization Safety Sim</div>
+        <div class="student-info">
+            <span id="display-name">Guest</span> | Score: <span id="display-score" class="score-badge">0</span>
+        </div>
+    </header>
+
+    <div id="screen-login" class="screen active">
+        <h2>Welcome to the Immunization Skills Lab</h2>
+        <div class="intro-text">
+            <p><strong>Topic:</strong> Safe immunization practices & Cold Chain Management.</p>
+        </div>
+        <div style="max-width: 400px; margin: 20px auto;">
+            <label>Student Name</label>
+            <input type="text" id="inp-name" placeholder="Enter Full Name">
+            <label>Roll Number</label>
+            <input type="text" id="inp-roll" placeholder="Enter Roll No">
+            <button class="btn btn-primary" style="width:100%" onclick="login()">Start Simulation</button>
+        </div>
+    </div>
+
+    <div id="screen-vvm" class="screen">
+        <h2>Station 1: Cold Chain & VVM</h2>
+        <p><strong>Select ALL usable vials.</strong></p>
+        <div id="vvm-container" class="vvm-grid"></div>
+        <div id="vvm-feedback" class="feedback"></div>
+        <button class="btn btn-success" onclick="checkVVM()">Check VVMs</button>
+    </div>
+
+    <div id="screen-ovp" class="screen">
+        <h2>Station 2: Open Vial Policy</h2>
+        <h3 id="ovp-text">Loading...</h3>
+        <div id="ovp-controls">
+            <button class="btn btn-primary" onclick="answerOVP(true)">✅ Usable</button>
+            <button class="btn btn-danger" onclick="answerOVP(false)">🗑️ Discard</button>
+        </div>
+        <div id="ovp-feedback" class="feedback"></div>
+    </div>
+
+    <div id="screen-schedule" class="screen">
+        <h2>Station 3: The Schedule</h2>
+        <p>Patient Age: <strong style="font-size:1.2em; color:#d35400;" id="patient-label">...</strong></p>
+        <p>Select the correct vaccines from the shelf:</p>
+        <div id="vaccine-list" class="vaccine-grid"></div>
+        <div id="sch-feedback" class="feedback"></div>
+        <button class="btn btn-success" onclick="checkSchedule()">Verify Schedule</button>
+    </div>
+
+    <div id="screen-route" class="screen">
+        <h2>Station 4: Administration</h2>
+        <div class="child-view">
+             
+
+[Image of AD syringe components diagram]
+
+            <div style="font-size: 80px;">👶</div> 
+            <p>Administering: <strong id="route-vax-name" style="font-size:1.5em; color:#2980b9">...</strong></p>
+        </div>
+
+        <div class="rs-options">
+            <div class="rs-col" id="opt-route" data-value="">
+                <strong>Select Route:</strong>
+                <div class="rs-btn" onclick="selectRouteOption('route','Oral',this)">Oral (Drops)</div>
+                <div class="rs-btn" onclick="selectRouteOption('route','Intradermal',this)">Intradermal (ID)</div>
+                <div class="rs-btn" onclick="selectRouteOption('route','Intramuscular',this)">Intramuscular (IM)</div>
+                <div class="rs-btn" onclick="selectRouteOption('route','Subcutaneous',this)">Subcutaneous (SC)</div>
+            </div>
+            <div class="rs-col" id="opt-site" data-value="">
+                <strong>Select Site:</strong>
+                <div class="rs-btn" onclick="selectRouteOption('site','Mouth',this)">Mouth</div>
+                <div class="rs-btn" onclick="selectRouteOption('site','Left Upper Arm',this)">Left Upper Arm</div>
+                <div class="rs-btn" onclick="selectRouteOption('site','Right Upper Arm',this)">Right Upper Arm</div>
+                <div class="rs-btn" onclick="selectRouteOption('site','Mid-Thigh',this)">Anterolateral Mid-Thigh</div>
+                <div class="rs-btn" onclick="selectRouteOption('site','Gluteal',this)">Gluteal (Buttock)</div>
+            </div>
+        </div>
+        <div id="route-feedback" class="feedback"></div>
+        <button id="btn-check-route" class="btn btn-success" onclick="checkRoute()">Administer</button>
+    </div>
+
+    <div id="screen-waste" class="screen">
+        <h2>Station 5: Biomedical Waste Management</h2>
+        <p>Dispose of the items. Click <strong>Item</strong> then <strong>Bin</strong>.</p>
+        <div class="waste-area">
+            <div class="waste-items">
+                <div class="waste-item" id="item-wrapper" onclick="selectWasteItem('wrapper', this)">🍬<br><small>Wrapper</small></div>
+                <div class="waste-item" id="item-syringe" onclick="selectWasteItem('syringe_full', this)">💉<br><small>AD Syringe</small></div>
+                <div class="waste-item" id="item-cotton" onclick="selectWasteItem('cotton', this)">🩸<br><small>Soiled Cotton</small></div>
+            </div>
+            <div class="waste-bins">
+                <div class="bin" style="background:#fff; border-color:#999; color:#333" onclick="clickBin('white')">Hub Cutter</div>
+                <div class="bin" style="background:#d9534f" onclick="clickBin('red')">Red Bin</div>
+                <div class="bin" style="background:#f0ad4e; color:#333" onclick="clickBin('yellow')">Yellow Bin</div>
+                <div class="bin" style="background:#0275d8" onclick="clickBin('blue')">Blue Bin</div>
+            </div>
+        </div>
+        <div id="waste-feedback" class="feedback"></div>
+    </div>
+
+    <div id="screen-result" class="screen" style="text-align: center;">
+        <h1>Complete</h1>
+        <p>Student: <strong id="final-name"></strong></p>
+        <h2 style="font-size:3em;"><span id="final-score-val">0</span></h2>
+        <button class="btn btn-primary" onclick="submitToGoogle()">📤 Submit Score</button>
+        <br><br>
+        <button class="btn" onclick="location.reload()">🔄 Restart</button>
+    </div>
+
+</div>
+
+</body>
+</html>
