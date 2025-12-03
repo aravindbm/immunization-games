@@ -238,6 +238,7 @@
 
         function renderOVP() {
             if(ovpQuestionIndex >= ovpQuestions.length) {
+                initSchedule();
                 goToScreen('screen-schedule');
                 return;
             }
@@ -506,4 +507,5 @@
     <div id="screen-schedule" class="screen" onmouseenter="initSchedule()">
         <h2>Station 3: The Schedule</h2>
         <p>Patient Age: <strong style="font-size:1.2em; color:#d35400;" id="patient-label">...</strong></p>
+
         <p>Select the correct vaccines from the shelf
